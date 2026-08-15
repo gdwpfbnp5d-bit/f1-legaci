@@ -26,7 +26,69 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:10px 5px;
 .form{display:grid;gap:10px}input,select{width:100%;background:#090b0f;border:1px solid var(--line);border-radius:11px;color:#fff;padding:13px}
 .toast{position:fixed;z-index:60;left:50%;bottom:100px;transform:translateX(-50%);background:#fff;color:#08090b;padding:10px 14px;border-radius:99px;font-weight:800;font-size:12px;display:none;box-shadow:0 10px 30px #0008}
 @media(min-width:700px){body{padding:15px}.app{border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:0 30px 80px #0008}.top{position:relative}}
-</style>
+/* F1 LEGACY - animations & ambiance */
+.hero,
+.card,
+.race-card,
+.action,
+.choice{
+  transition:
+    transform .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease;
+}
+
+.hero:hover,
+.card:hover,
+.race-card:hover{
+  transform:translateY(-2px);
+  border-color:#e1060055;
+  box-shadow:0 12px 35px #0006;
+}
+
+.action:active,
+.choice:active,
+.navbtn:active{
+  transform:scale(.97);
+}
+
+.hero:after{
+  animation:heroGlow 5s ease-in-out infinite;
+}
+
+@keyframes heroGlow{
+  0%,100%{
+    transform:scale(1);
+    opacity:.5;
+  }
+  50%{
+    transform:scale(1.18);
+    opacity:1;
+  }
+}
+
+@keyframes racePulse{
+  0%,100%{
+    box-shadow:0 0 0 rgba(225,6,0,0);
+  }
+  50%{
+    box-shadow:0 0 25px rgba(225,6,0,.12);
+  }
+}
+
+.race-card{
+  animation:racePulse 4s ease-in-out infinite;
+}
+
+.progress i{
+  animation:progressIn .9s ease-out;
+}
+
+@keyframes progressIn{
+  from{
+    width:0;
+  }
+}</style>
 </head>
 <body>
 <div class="app">
