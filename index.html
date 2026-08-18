@@ -1246,7 +1246,87 @@ function juniorRace(){
     </button>
   `);
 }
-  function gp(){if(g.stage!=="F1"){tab="career";render();return}if(g.round>=24){seasonEnd();return}const c=tracks[g.round];const weather=Math.random()<.23?"pluie":Math.random()<.18?"variable":"sec";race={weather,strategy:"balanced",tyres:"medium",grid:0};$("main").innerHTML=`<div class="screen"><div class="race-card"><span class="tag">ROUND ${g.round+1}/24 · ${g.year}</span><h1>${c[1]} ${c[0]}</h1><div class="circuit">${weather==="pluie"?"🌧️":"🏁"}</div><p class="muted">La météo annonce une course <b>${weather}</b>. Choisis ton approche.</p><div class="grid2"><button class="choice" onclick="qual('attack')">🔥 <b>Agressive</b><div class="sub">Rythme élevé, risque élevé</div></button><button class="choice" onclick="qual('balanced')">⚖️ <b>Équilibrée</b><div class="sub">Polyvalente</div></button><button class="choice" onclick="qual('safe')">🛡️ <b>Prudente</b><div class="sub">Protège les pneus</div></button><button class="choice" onclick="qual('wet')">🌧️ <b>Spéciale pluie</b><div class="sub">Maximise ton avantage</div></button></div></div></div>`}
+  function gp(){
+  if(g.stage!=="F1"){
+    juniorRace();
+    return;
+  }
+
+  if(g.round>=24){
+    seasonEnd();
+    return;
+  }
+
+  const c=tracks[g.round];
+  const weather=
+    Math.random()<.23
+      ?"pluie"
+      :Math.random()<.18
+      ?"variable"
+      :"sec";
+
+  race={
+    weather,
+    strategy:"balanced",
+    tyres:"medium",
+    grid:0
+  };
+
+  $("main").innerHTML=`
+    <div class="screen">
+      <div class="race-card">
+
+        <span class="tag">
+          ROUND ${g.round+1}/24 · ${g.year}
+        </span>
+
+        <h1>${c[1]} ${c[0]}</h1>
+
+        <div class="circuit">
+          ${weather==="pluie"?"🌧️":"🏁"}
+        </div>
+
+        <p class="muted">
+          La météo annonce une course
+          <b>${weather}</b>.
+          Choisis ton approche.
+        </p>
+
+        <div class="grid2">
+
+          <button class="choice" onclick="qual('attack')">
+            🔥 <b>Agressive</b>
+            <div class="sub">
+              Rythme élevé, risque élevé
+            </div>
+          </button>
+
+          <button class="choice" onclick="qual('balanced')">
+            ⚖️ <b>Équilibrée</b>
+            <div class="sub">
+              Polyvalente
+            </div>
+          </button>
+
+          <button class="choice" onclick="qual('safe')">
+            🛡️ <b>Prudente</b>
+            <div class="sub">
+              Protège les pneus
+            </div>
+          </button>
+
+          <button class="choice" onclick="qual('wet')">
+            🌧️ <b>Spéciale pluie</b>
+            <div class="sub">
+              Maximise ton avantage
+            </div>
+          </button>
+
+        </div>
+      </div>
+    </div>
+  `;
+}
 function qual(s){race.strategy=s;let car=(teams[g.team]||80)+g.carDev;let score=g.pace*.5+g.consistency*.2+g.focus*.1+car*.25+(race.weather==="pluie"?g.wet*.18:0)+Math.random()*16-8+(s==="attack"?4:s==="safe"?-2:0);race.grid=Math.max(1,Math.min(20,Math.round(12-(score-70)/3)));if(race.grid===1)g.poles++;modal(`<h2>Qualifications</h2><div class="circuit">P${race.grid}</div><p>${race.grid<=3?"🔥 Première ligne !":"Il faudra dépasser en course."}</p><button style="width:100%" onclick="tyres()">Choisir les pneus →</button>`)}
 function tyres(){modal(`<h2>Stratégie pneus</h2><button class="choice" onclick="startRace('soft')">🔴 <b>Tendres</b><div class="sub">Maximum de rythme</div></button><button class="choice" onclick="startRace('medium')">🟡 <b>Mediums</b><div class="sub">Équilibre</div></button><button class="choice" onclick="startRace('hard')">⚪ <b>Durs</b><div class="sub">Longévité</div></button><button class="choice" onclick="startRace('inter')">🟢 <b>Intermédiaires</b><div class="sub">Pour la pluie</div></button>`)}
 let racePhase=0,raceScore=0,racePhases=[];
