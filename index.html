@@ -569,6 +569,18 @@ main{
 const tracks=[["Bahreïn","🇧🇭"],["Arabie Saoudite","🇸🇦"],["Australie","🇦🇺"],["Japon","🇯🇵"],["Chine","🇨🇳"],["Miami","🇺🇸"],["Imola","🇮🇹"],["Monaco","🇲🇨"],["Espagne","🇪🇸"],["Canada","🇨🇦"],["Autriche","🇦🇹"],["Silverstone","🇬🇧"],["Spa","🇧🇪"],["Budapest","🇭🇺"],["Zandvoort","🇳🇱"],["Monza","🇮🇹"],["Bakou","🇦🇿"],["Singapour","🇸🇬"],["Austin","🇺🇸"],["Mexico","🇲🇽"],["São Paulo","🇧🇷"],["Las Vegas","🇺🇸"],["Qatar","🇶🇦"],["Abu Dhabi","🇦🇪"]];
 const teams={Ferrari:91,McLaren:94,"Red Bull Racing":93,Mercedes:89,"Aston Martin":83,Alpine:79,Williams:76,Haas:74,Audi:78,Cadillac:75};
 let g=JSON.parse(localStorage.getItem("F1LegacyMobile")||"null"),tab="home",race={};
+  const juniorTracks=[
+  ["Lyon","🇫🇷"],
+  ["Le Mans","🇫🇷"],
+  ["Milan","🇮🇹"],
+  ["Barcelone","🇪🇸"],
+  ["Monaco","🇲🇨"],
+  ["Bruxelles","🇧🇪"],
+  ["Londres","🇬🇧"],
+  ["Berlin","🇩🇪"],
+  ["Madrid","🇪🇸"],
+  ["Abu Dhabi","🇦🇪"]
+];
 
 const $=x=>document.getElementById(x), save=()=>{localStorage.setItem("F1LegacyMobile",JSON.stringify(g));render()}, clamp=x=>Math.max(1,Math.min(99,Math.round(x))), money=x=>"€"+Math.round(x).toLocaleString("fr-FR");
 function toast(t){$("toast").textContent=t;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",1800)}
