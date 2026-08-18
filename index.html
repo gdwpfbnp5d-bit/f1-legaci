@@ -1330,7 +1330,6 @@ function juniorRace(){
 }
 function qual(s){race.strategy=s;let car=(teams[g.team]||80)+g.carDev;let score=g.pace*.5+g.consistency*.2+g.focus*.1+car*.25+(race.weather==="pluie"?g.wet*.18:0)+Math.random()*16-8+(s==="attack"?4:s==="safe"?-2:0);race.grid=Math.max(1,Math.min(20,Math.round(12-(score-70)/3)));if(race.grid===1)g.poles++;modal(`<h2>Qualifications</h2><div class="circuit">P${race.grid}</div><p>${race.grid<=3?"🔥 Première ligne !":"Il faudra dépasser en course."}</p><button style="width:100%" onclick="tyres()">Choisir les pneus →</button>`)}
 function tyres(){modal(`<h2>Stratégie pneus</h2><button class="choice" onclick="startRace('soft')">🔴 <b>Tendres</b><div class="sub">Maximum de rythme</div></button><button class="choice" onclick="startRace('medium')">🟡 <b>Mediums</b><div class="sub">Équilibre</div></button><button class="choice" onclick="startRace('hard')">⚪ <b>Durs</b><div class="sub">Longévité</div></button><button class="choice" onclick="startRace('inter')">🟢 <b>Intermédiaires</b><div class="sub">Pour la pluie</div></button>`)}
-let racePhase=0,raceScore=0,racePhases=[];
 function startRace(t){
  race.tyres=t;closeModal();racePhase=0;raceScore=0;
  racePhases=["Départ","Premiers tours","Arrêt aux stands","Milieu de course","Derniers tours"];
