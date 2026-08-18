@@ -569,6 +569,10 @@ main{
 const tracks=[["Bahreïn","🇧🇭"],["Arabie Saoudite","🇸🇦"],["Australie","🇦🇺"],["Japon","🇯🇵"],["Chine","🇨🇳"],["Miami","🇺🇸"],["Imola","🇮🇹"],["Monaco","🇲🇨"],["Espagne","🇪🇸"],["Canada","🇨🇦"],["Autriche","🇦🇹"],["Silverstone","🇬🇧"],["Spa","🇧🇪"],["Budapest","🇭🇺"],["Zandvoort","🇳🇱"],["Monza","🇮🇹"],["Bakou","🇦🇿"],["Singapour","🇸🇬"],["Austin","🇺🇸"],["Mexico","🇲🇽"],["São Paulo","🇧🇷"],["Las Vegas","🇺🇸"],["Qatar","🇶🇦"],["Abu Dhabi","🇦🇪"]];
 const teams={Ferrari:91,McLaren:94,"Red Bull Racing":93,Mercedes:89,"Aston Martin":83,Alpine:79,Williams:76,Haas:74,Audi:78,Cadillac:75};
 let g=JSON.parse(localStorage.getItem("F1LegacyMobile")||"null"),tab="home",race={};
+  let racePhase=0;
+let raceScore=0;
+let racePhases=[];
+let juniorEvent=null;
   const juniorTracks=[
   ["Lyon","🇫🇷"],
   ["Le Mans","🇫🇷"],
@@ -818,7 +822,431 @@ function train(x){if(x==="pace"){g.pace+=2;g.race+=2}if(x==="fitness"){g.fitness
 function continueCareer(){if(g.stage==="F1"){tab="gp";render();return}if(g.stage==="Karting"&&g.age>=14)return path("F4",["F4 nationale","F4 européenne","Encore du karting"]);if(g.stage==="F4"&&g.age>=16)return path("F3",["F3 avec académie","F3 indépendante"]);if(g.stage==="F3"&&g.age>=18)return path("F2",["Signer en F2","Encore une saison F3"]);if(g.stage==="F2"&&g.age>=20)return path("F1",Object.keys(teams).slice(0,6));g.age++;g.year++;g.pace=clamp(g.pace+1);g.race=clamp(g.race+1);g.history.push(`Saison ${g.year} : progression en ${g.stage}.`);save()}
 function path(type,opts){modal(`<h2>${type==="F1"?"Ton premier contrat F1":`Passage en ${type}`}</h2>${opts.map((o,i)=>`<div class="row"><b>${o}</b><button onclick="pick('${type}',${i})">Choisir</button></div>`).join("")}`)}
 function pick(type,i){closeModal();if(type==="F4"){g.stage="F4";g.pace+=5;g.race+=4;g.rep+=7;g.money+=10000}if(type==="F3"){g.stage="F3";g.pace+=6;g.race+=6;g.rep+=9;g.money+=25000}if(type==="F2"){g.stage="F2";g.pace+=7;g.race+=7;g.rep+=12;g.money+=50000}if(type==="F1"){g.stage="F1";g.team=Object.keys(teams)[i];g.academy="Programme F1";g.contract=2;g.rep+=20;g.pace+=6;g.race+=6;g.fitness+=4;g.history.push(`CONTRAT F1 : ${g.team} te donne ta chance au plus haut niveau.`)}g.age++;g.year++;save()}
-function gp(){if(g.stage!=="F1"){tab="career";render();return}if(g.round>=24){seasonEnd();return}const c=tracks[g.round];const weather=Math.random()<.23?"pluie":Math.random()<.18?"variable":"sec";race={weather,strategy:"balanced",tyres:"medium",grid:0};$("main").innerHTML=`<div class="screen"><div class="race-card"><span class="tag">ROUND ${g.round+1}/24 · ${g.year}</span><h1>${c[1]} ${c[0]}</h1><div class="circuit">${weather==="pluie"?"🌧️":"🏁"}</div><p class="muted">La météo annonce une course <b>${weather}</b>. Choisis ton approche.</p><div class="grid2"><button class="choice" onclick="qual('attack')">🔥 <b>Agressive</b><div class="sub">Rythme élevé, risque élevé</div></button><button class="choice" onclick="qual('balanced')">⚖️ <b>Équilibrée</b><div class="sub">Polyvalente</div></button><button class="choice" onclick="qual('safe')">🛡️ <b>Prudente</b><div class="sub">Protège les pneus</div></button><button class="choice" onclick="qual('wet')">🌧️ <b>Spéciale pluie</b><div class="sub">Maximise ton avantage</div></button></div></div></div>`}
+function juniorRace(){
+  const total=juniorSeasonLengths[g.stage]||10;
+  if(g.round>=total){
+    juniorSeasonEnd();
+    return;
+  }
+
+  const c=juniorTracks[g.round%juniorTracks.length];
+  const rival=rivals[g.stage]||rivals["Karting"];
+
+  const weather=Math.random()<.25?"pluie":Math.random()<.2?"variable":"sec";
+
+  juniorEvent={
+    circuit:c,
+    rival,
+    weather,
+    objective:g.round===0?"TOP 5":"TOP 8"
+  };
+
+  $("main").innerHTML=`
+    <div class="screen career-screen">
+      <div class="race-card">
+        <span class="tag">🏁 ${g.stage.toUpperCase()} · MANCHE ${g.round+1}/${total}</span>
+        <h1>${c[1]} ${c[0]}</h1>
+
+        <div class="circuit">
+          ${weather==="pluie"?"🌧️":"🏎️"}
+        </div>
+
+        <div class="card">
+          <h2>🔥 Rival à surveiller</h2>
+          <p>
+            <b>${rival.name}</b> ${rival.country}
+          </p>
+          <p class="muted">
+            Il est considéré comme l'un des pilotes les plus rapides du plateau.
+            Aujourd'hui, il part juste devant toi.
+          </p>
+        </div>
+
+        <div class="card">
+          <h2>🎯 Objectif</h2>
+          <p>
+            Terminer dans le <b>${juniorEvent.objective}</b>.
+          </p>
+          <p class="muted">
+            Météo prévue : <b>${weather}</b>
+          </p>
+        </div>
+
+        <button style="width:100%" onclick="juniorStart()">
+          Commencer le week-end →
+        </button>
+      </div>
+    </div>
+  `;
+}
+  function juniorStart(){
+  closeModal();
+
+  racePhase=0;
+  raceScore=0;
+
+  const rival=juniorEvent.rival;
+
+  const base=
+    g.pace*.32+
+    g.race*.28+
+    g.consistency*.15+
+    g.focus*.12+
+    g.fitness*.08;
+
+  const rivalScore=
+    rival.pace*.45+
+    rival.focus*.25+
+    Math.random()*20-10;
+
+  raceScore=base-rivalScore;
+
+  $("main").innerHTML=`
+    <div class="screen">
+      <div class="race-card">
+        <span class="tag">🏁 DÉPART · ${g.stage.toUpperCase()}</span>
+
+        <h1>Feu vert !</h1>
+
+        <div class="circuit">🏎️🏎️🏎️</div>
+
+        <div class="radio">
+          INGÉNIEUR :
+          "Excellent départ. ${rival.name} est juste devant toi."
+        </div>
+
+        <div class="card">
+          <h2>🔥 Premier duel</h2>
+          <p>
+            ${rival.name} ferme légèrement la porte dans le premier virage.
+            Tu as une possibilité de dépassement.
+          </p>
+
+          <button class="choice" onclick="juniorChoice('attack')">
+            🔥 Attaquer
+            <div class="sub">Gros risque · gros gain potentiel</div>
+          </button>
+
+          <button class="choice" onclick="juniorChoice('wait')">
+            🧠 Patienter
+            <div class="sub">Moins risqué · observe ton rival</div>
+          </button>
+
+          <button class="choice" onclick="juniorChoice('outside')">
+            ⚡ Prendre l'extérieur
+            <div class="sub">Très risqué · dépassement spectaculaire possible</div>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+  function juniorChoice(choice){
+  let result;
+  let success=false;
+
+  if(choice==="attack"){
+    const chance=0.45+(g.race/200)+(g.focus/250);
+
+    if(Math.random()<chance){
+      raceScore+=12;
+      g.rep=clamp(g.rep+2);
+      result="🔥 Tu plonges à l'intérieur et réussis un magnifique dépassement !";
+      success=true;
+    }else{
+      raceScore-=10;
+      g.consistency=clamp(g.consistency-1);
+      result="💥 Tu freines trop tard. Tu élargis ta trajectoire et perds du temps.";
+    }
+  }
+
+  if(choice==="wait"){
+    raceScore+=4;
+    g.consistency=clamp(g.consistency+1);
+    result="🧠 Tu restes calme. Lucas se protège et tu observes ses trajectoires.";
+    success=true;
+  }
+
+  if(choice==="outside"){
+    const chance=0.32+(g.pace/220)+(g.focus/300);
+
+    if(Math.random()<chance){
+      raceScore+=15;
+      g.rep=clamp(g.rep+3);
+      result="⚡ Tu prends l'extérieur ! Un dépassement spectaculaire qui fait réagir le paddock.";
+      success=true;
+    }else{
+      raceScore-=14;
+      result="❌ L'extérieur ne fonctionne pas. Tu dois couper ton effort et perds plusieurs positions.";
+    }
+  }
+
+  g.history.push(
+    `Manche ${g.round+1} · ${juniorEvent.circuit[0]} : ${result}`
+  );
+
+  save();
+
+  modal(`
+    <h2>${success?"🔥 Excellent choix":"⚠️ Situation difficile"}</h2>
+    <p>${result}</p>
+    <p class="muted">
+      ${success
+        ?"Ton choix améliore ta situation en course."
+        :"Cette décision te coûte du temps, mais la course est loin d'être terminée."}
+    </p>
+    <button style="width:100%" onclick="juniorNextPhase()">
+      Continuer la course →
+    </button>
+  `);
+}
+  function juniorNextPhase(){
+  closeModal();
+
+  racePhase++;
+
+  if(racePhase>=4){
+    juniorFinish();
+    return;
+  }
+
+  const phases=[
+    {
+      title:"Premiers tours",
+      text:"Le peloton commence à s'étirer. Ton rythme est bon, mais Lucas reste juste devant."
+    },
+    {
+      title:"Milieu de course",
+      text:"Les pneus commencent à perdre de l'adhérence. Une erreur peut coûter plusieurs positions."
+    },
+    {
+      title:"Derniers tours",
+      text:"La pression monte. Tu es maintenant dans le groupe qui se bat pour le podium."
+    }
+  ];
+
+  const phase=phases[racePhase-1];
+
+  const weatherText=
+    juniorEvent.weather==="pluie"
+      ?"🌧️ La pluie commence à tomber."
+      :juniorEvent.weather==="variable"
+      ?"🌥️ Les conditions deviennent imprévisibles."
+      :"☀️ La piste reste sèche.";
+
+  $("main").innerHTML=`
+    <div class="screen">
+      <div class="race-card">
+
+        <span class="tag">
+          TOUR ${racePhase+2} · ${phase.title.toUpperCase()}
+        </span>
+
+        <h1>${phase.title}</h1>
+
+        <div class="circuit">
+          ${juniorEvent.weather==="pluie"?"🌧️🏎️":"🏎️💨"}
+        </div>
+
+        <div class="radio">
+          INGÉNIEUR :
+          "${phase.text}"
+        </div>
+
+        <p class="muted">${weatherText}</p>
+
+        <div class="card">
+          <h2>🎮 Ta décision</h2>
+
+          <button class="choice" onclick="juniorDecision('push')">
+            🔥 Attaquer
+            <div class="sub">Plus de rythme · plus de risque</div>
+          </button>
+
+          <button class="choice" onclick="juniorDecision('steady')">
+            ⚖️ Garder le rythme
+            <div class="sub">Approche équilibrée</div>
+          </button>
+
+          <button class="choice" onclick="juniorDecision('save')">
+            🛡️ Préserver
+            <div class="sub">Réduire le risque</div>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  `;
+}
+  function juniorDecision(choice){
+  let delta=0;
+  let text="";
+  let success=true;
+
+  if(choice==="push"){
+    delta=g.pace*.12+g.race*.08+Math.random()*10-5;
+
+    if(Math.random()<0.25){
+      delta-=12;
+      success=false;
+      text="Tu attaques fort, mais tu bloques légèrement une roue. Tu perds du temps.";
+    }else{
+      delta+=7;
+      text="🔥 Tu augmentes le rythme et gagnes du terrain sur le groupe devant toi.";
+    }
+  }
+
+  if(choice==="steady"){
+    delta=g.consistency*.10+g.focus*.08+Math.random()*6-3;
+    text="⚖️ Tu gardes un rythme propre et régulier. Tu remontes progressivement.";
+  }
+
+  if(choice==="save"){
+    delta=g.consistency*.12+g.fitness*.06+Math.random()*5-2;
+    text="🛡️ Tu préserves tes pneus et évites les erreurs. Tu seras mieux placé pour les derniers tours.";
+  }
+
+  if(juniorEvent.weather==="pluie"){
+    delta+=(g.wet-50)*.12;
+  }
+
+  raceScore+=delta;
+
+  if(success && delta>8){
+    g.rep=clamp(g.rep+1);
+  }
+
+  g.history.push(
+    `Course · ${juniorEvent.circuit[0]} : ${text}`
+  );
+
+  save();
+
+  modal(`
+    <h2>${success?"🏎️ Bon rythme":"⚠️ Incident"}</h2>
+    <p>${text}</p>
+    <div class="stat">
+      <span>Impact sur ta course</span>
+      <b>${delta>=0?"+":""}${Math.round(delta)}</b>
+    </div>
+    <button style="width:100%;margin-top:12px" onclick="juniorNextPhase()">
+      Continuer →
+    </button>
+  `);
+}
+  function juniorFinish(){
+  closeModal();
+
+  const total=juniorSeasonLengths[g.stage]||10;
+
+  let performance=
+    g.pace*.28+
+    g.race*.30+
+    g.consistency*.16+
+    g.focus*.10+
+    g.fitness*.08+
+    g.wet*.08;
+
+  performance+=raceScore;
+  performance+=Math.random()*24-12;
+
+  const rival=rivals[g.stage]||rivals["Karting"];
+
+  const rivalPerformance=
+    rival.pace*.38+
+    rival.focus*.22+
+    Math.random()*20-10;
+
+  const fieldStrength=70+Math.random()*25;
+
+  let pos;
+
+  if(performance>rivalPerformance+12 && performance>fieldStrength+12){
+    pos=1;
+  }else if(performance>rivalPerformance+6){
+    pos=Math.random()<.55?2:3;
+  }else if(performance>fieldStrength){
+    pos=4+Math.floor(Math.random()*3);
+  }else{
+    pos=7+Math.floor(Math.random()*6);
+  }
+
+  pos=Math.max(1,Math.min(12,pos));
+
+  const pointsTable=[25,18,15,12,10,8,6,4,2,1];
+  const pts=pointsTable[pos-1]||0;
+
+  g.round++;
+  g.races++;
+  g.seasonPts+=pts;
+  g.points+=pts;
+
+  if(pos===1){
+    g.wins++;
+    g.rep=clamp(g.rep+4);
+  }else if(pos<=3){
+    g.podiums++;
+    g.rep=clamp(g.rep+2);
+  }else if(pos<=5){
+    g.rep=clamp(g.rep+1);
+  }
+
+  let headline;
+
+  if(pos===1){
+    headline=`🏆 Victoire incroyable ! Tu bats ${rival.name} et remportes la course.`;
+  }else if(pos===2){
+    headline=`🥈 Deuxième place ! ${rival.name} reste devant toi, mais tu montes sur le podium.`;
+  }else if(pos===3){
+    headline=`🥉 Podium ! Une solide performance face à ${rival.name}.`;
+  }else if(pos<=5){
+    headline=`🎯 Objectif atteint ! Tu termines P${pos} et marques de précieux points.`;
+  }else{
+    headline=`⚠️ Course difficile. Tu termines P${pos}. Il faudra analyser ce qui n'a pas fonctionné.`;
+  }
+
+  g.history.push(
+    `${juniorEvent.circuit[0]} · P${pos} · ${pts} pts — ${headline}`
+  );
+
+  save();
+
+  modal(`
+    <h2>${g.stage} · ${juniorEvent.circuit[0]} 🏁</h2>
+
+    <div class="stats">
+      <div class="stat">
+        <span>Résultat</span>
+        <b>P${pos}</b>
+      </div>
+
+      <div class="stat">
+        <span>Points</span>
+        <b>+${pts}</b>
+      </div>
+
+      <div class="stat">
+        <span>Championnat</span>
+        <b>${g.seasonPts}</b>
+      </div>
+    </div>
+
+    <p>${headline}</p>
+
+    <p class="muted">
+      ${pos<=3
+        ? "Le paddock commence à parler de toi."
+        : pos<=5
+        ? "Ta progression reste encourageante."
+        : "Cette course va devoir être analysée avec ton équipe."}
+    </p>
+
+    <button style="width:100%" onclick="closeModal();render()">
+      Retour à la carrière →
+    </button>
+  `);
+}
+  function gp(){if(g.stage!=="F1"){tab="career";render();return}if(g.round>=24){seasonEnd();return}const c=tracks[g.round];const weather=Math.random()<.23?"pluie":Math.random()<.18?"variable":"sec";race={weather,strategy:"balanced",tyres:"medium",grid:0};$("main").innerHTML=`<div class="screen"><div class="race-card"><span class="tag">ROUND ${g.round+1}/24 · ${g.year}</span><h1>${c[1]} ${c[0]}</h1><div class="circuit">${weather==="pluie"?"🌧️":"🏁"}</div><p class="muted">La météo annonce une course <b>${weather}</b>. Choisis ton approche.</p><div class="grid2"><button class="choice" onclick="qual('attack')">🔥 <b>Agressive</b><div class="sub">Rythme élevé, risque élevé</div></button><button class="choice" onclick="qual('balanced')">⚖️ <b>Équilibrée</b><div class="sub">Polyvalente</div></button><button class="choice" onclick="qual('safe')">🛡️ <b>Prudente</b><div class="sub">Protège les pneus</div></button><button class="choice" onclick="qual('wet')">🌧️ <b>Spéciale pluie</b><div class="sub">Maximise ton avantage</div></button></div></div></div>`}
 function qual(s){race.strategy=s;let car=(teams[g.team]||80)+g.carDev;let score=g.pace*.5+g.consistency*.2+g.focus*.1+car*.25+(race.weather==="pluie"?g.wet*.18:0)+Math.random()*16-8+(s==="attack"?4:s==="safe"?-2:0);race.grid=Math.max(1,Math.min(20,Math.round(12-(score-70)/3)));if(race.grid===1)g.poles++;modal(`<h2>Qualifications</h2><div class="circuit">P${race.grid}</div><p>${race.grid<=3?"🔥 Première ligne !":"Il faudra dépasser en course."}</p><button style="width:100%" onclick="tyres()">Choisir les pneus →</button>`)}
 function tyres(){modal(`<h2>Stratégie pneus</h2><button class="choice" onclick="startRace('soft')">🔴 <b>Tendres</b><div class="sub">Maximum de rythme</div></button><button class="choice" onclick="startRace('medium')">🟡 <b>Mediums</b><div class="sub">Équilibre</div></button><button class="choice" onclick="startRace('hard')">⚪ <b>Durs</b><div class="sub">Longévité</div></button><button class="choice" onclick="startRace('inter')">🟢 <b>Intermédiaires</b><div class="sub">Pour la pluie</div></button>`)}
 let racePhase=0,raceScore=0,racePhases=[];
