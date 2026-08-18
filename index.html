@@ -581,6 +581,53 @@ let g=JSON.parse(localStorage.getItem("F1LegacyMobile")||"null"),tab="home",race
   ["Madrid","🇪🇸"],
   ["Abu Dhabi","🇦🇪"]
 ];
+  const juniorSeasonLengths={
+  "Karting":10,
+  "F4":12,
+  "F3":14,
+  "F2":16,
+  "F1":24
+};
+
+const juniorNextStage={
+  "Karting":"F4",
+  "F4":"F3",
+  "F3":"F2",
+  "F2":"F1",
+  "F1":"Champion du Monde"
+};
+  const rivals={
+  "Karting":{
+    name:"Lucas Moreau",
+    country:"🇫🇷",
+    pace:46,
+    focus:44
+  },
+  "F4":{
+    name:"Lucas Moreau",
+    country:"🇫🇷",
+    pace:58,
+    focus:56
+  },
+  "F3":{
+    name:"Lucas Moreau",
+    country:"🇫🇷",
+    pace:70,
+    focus:68
+  },
+  "F2":{
+    name:"Lucas Moreau",
+    country:"🇫🇷",
+    pace:80,
+    focus:78
+  },
+  "F1":{
+    name:"Lucas Moreau",
+    country:"🇫🇷",
+    pace:88,
+    focus:86
+  }
+};
 
 const $=x=>document.getElementById(x), save=()=>{localStorage.setItem("F1LegacyMobile",JSON.stringify(g));render()}, clamp=x=>Math.max(1,Math.min(99,Math.round(x))), money=x=>"€"+Math.round(x).toLocaleString("fr-FR");
 function toast(t){$("toast").textContent=t;$("toast").style.display="block";setTimeout(()=>$("toast").style.display="none",1800)}
