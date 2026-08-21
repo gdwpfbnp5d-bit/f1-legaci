@@ -1336,9 +1336,16 @@ function startRace(t){
  renderRacePhase();
 }
 function raceNext(){
- racePhase++;
- if(racePhase>=racePhases.length){finish(raceScore);return}
- renderRacePhase();
+  console.log("raceNext fonctionne", racePhase);
+
+  racePhase++;
+
+  if(racePhase >= racePhases.length){
+    finish(raceScore);
+    return;
+  }
+
+  renderRacePhase();
 }
 function renderRacePhase(){
   alert("NOUVELLE VERSION DE RENDER RACE PHASE");
