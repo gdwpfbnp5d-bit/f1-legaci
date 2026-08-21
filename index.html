@@ -1341,13 +1341,152 @@ function raceNext(){
  renderRacePhase();
 }
 function renderRacePhase(){
- let base=g.pace*.3+g.race*.28+g.consistency*.15+g.fitness*.08+g.focus*.06+((teams[g.team]||80)+g.carDev)*.25;
- let b=race.strategy==="attack"?5:race.strategy==="safe"?-3:2;
- if(race.tyres==="soft")b+=2;if(race.tyres==="hard")b-=1;
- if(race.tyres==="inter")b+=race.weather==="pluie"?7:-6;
- if(race.weather==="pluie")b+=(g.wet-50)*.15;
- raceScore+=base+b+Math.random()*18-9;
- $("main").innerHTML=`<div class="screen"><div class="race-card"><span class="tag">${racePhases[racePhase].toUpperCase()}</span><h1>${tracks[g.round][1]} ${tracks[g.round][0]}</h1><div class="lights">${[1,2,3,4,5].map(n=>`<i class="light ${n<=racePhase+1?"on":""}"></i>`).join("")}</div><div class="radio">INGÉNIEUR : "${racePhase===0?"Excellent départ.":racePhase===2?"Arrêt propre, tu ressors dans le trafic.":"Le rythme est bon. Continue comme ça."}"</div><button style="width:100%;margin-top:14px" onclick="raceNext()">${racePhase===racePhases.length-1?"Voir le résultat →":"Continuer →"}</button></div></div>`;
+  const phase = racePhases[racePhase];
+
+  let situation = "";
+  let choices = "";
+
+  if(racePhase === 0){
+    situation = race.grid <= 3
+      ? `Tu t'élances depuis la ${race.grid}e place. Les feux rouges s'allument. Devant toi, les deux voitures de tête sont côte à côte.`
+      : `Tu t'élances depuis la ${race.grid}e place. Le peloton est compact et le premier virage approche à toute vitesse.`;
+
+    choices = `
+      <button class="choice" onclick="raceDecision('start_attack')">
+        🔥 Prendre un départ agressif
+        <div class="sub">Gagner des positions immédiatement, mais risque de contact</div>
+      </button>
+
+      <button class="choice" onclick="raceDecision('start_safe')">
+        🧠 Assurer le départ
+        <div class="sub">Éviter les ennuis et construire ta course</div>
+      </button>
+    `;
+  }
+
+  else if(racePhase === 1){
+    situation = race.tyres === "soft"
+      ? "Tes pneus tendres offrent énormément de grip. Tu peux attaquer, mais leur fenêtre de performance est courte."
+      : race.tyres === "hard"
+      ? "Les pneus durs sont encore loin de leur fenêtre idéale. Tu dois être patient."
+      : race.tyres === "inter"
+      ? "Les intermédiaires commencent à chauffer correctement. Si la piste sèche, ton choix pourrait devenir un problème."
+      : "Tes mediums fonctionnent correctement. Le rythme est régulier et tu peux commencer à préparer ton prochain mouvement.";
+
+    choices = `
+      <button class="choice" onclick="raceDecision('push')">
+        🔥 Augmenter le rythme
+        <div class="sub">Plus de performance, plus d'usure</div>
+      </button>
+
+      <button class="choice" onclick="raceDecision('steady')">
+        ⚖️ Garder le rythme
+        <div class="sub">Construire une course régulière</div>
+      </button>
+
+      <button class="choice" onclick="raceDecision('save')">
+        🛡️ Préserver les pneus
+        <div class="sub">Moins rapide maintenant, avantage potentiel plus tard</div>
+      </button>
+    `;
+  }
+
+  else if(racePhase === 2){
+    situation = "Ton ingénieur te demande de rentrer aux stands. Le timing de l'arrêt pourrait décider de ta course.";
+
+    choices = `
+      <button class="choice" onclick="raceDecision('pit_fast')">
+        ⚡ Arrêt rapide
+        <div class="sub">Prendre un risque avec l'équipe</div>
+      </button>
+
+      <button class="choice" onclick="raceDecision('pit_safe')">
+        🧠 Arrêt sécurisé
+        <div class="sub">Éviter une erreur aux stands</div>
+      </button>
+
+      <button class="choice" onclick="raceDecision('stay')">
+        🏎️ Rester en piste
+        <div class="sub">Gagner du temps mais prolonger ton relais</div>
+      </button>
+    `;
+  }
+
+  else if(racePhase === 3){
+    situation = race.weather === "pluie"
+      ? "La pluie s'intensifie. Les conditions deviennent extrêmement difficiles et chaque virage demande de la concentration."
+      : race.weather === "variable"
+      ? "Les conditions changent rapidement. Certains secteurs sont encore secs, d'autres commencent à devenir glissants."
+      : "Le milieu de course est calme en apparence. Mais ton ingénieur t'annonce que la voiture devant commence à perdre du rythme.";
+
+    choices = `
+      <button class="choice" onclick="raceDecision('attack')">
+        🔥 Attaquer
+        <div class="sub">Profiter immédiatement de la situation</div>
+      </button>
+
+      <button class="choice" onclick="raceDecision('observe')">
+        👀 Observer
+        <div class="sub">Attendre le meilleur moment</div>
+      </button>
+
+      <button class="choice" onclick="raceDecision('defend')">
+        🛡️ Défendre
+        <div class="sub">Protéger ta position</div>
+      </button>
+    `;
+  }
+
+  else {
+    situation = race.grid <= 5
+      ? "Derniers tours. Tu es dans le groupe de tête. Ton ingénieur hurle dans la radio : « C'est maintenant ! »"
+      : "Derniers tours. Tu as encore une chance de gagner quelques positions avant le drapeau à damier.";
+
+    choices = `
+      <button class="choice" onclick="raceDecision('final_attack')">
+        🔥 Tout donner
+        <div class="sub">Maximum de performance, maximum de risque</div>
+      </button>
+
+      <button class="choice" onclick="raceDecision('final_control')">
+        🧠 Contrôler la course
+        <div class="sub">Limiter les risques et assurer le résultat</div>
+      </button>
+    `;
+  }
+
+  $("main").innerHTML = `
+    <div class="screen">
+      <div class="race-card">
+
+        <span class="tag">
+          ${phase.toUpperCase()} · TOUR ${racePhase + 1}/${racePhases.length}
+        </span>
+
+        <h1>${tracks[g.round][1]} ${tracks[g.round][0]}</h1>
+
+        <div class="circuit">
+          ${race.weather === "pluie" ? "🌧️🏎️" :
+            race.weather === "variable" ? "🌥️🏎️" :
+            "🏎️💨"}
+        </div>
+
+        <div class="card">
+          <h2>📻 Radio</h2>
+          <p>
+            <b>INGÉNIEUR :</b>
+            "${situation}"
+          </p>
+        </div>
+
+        <div class="card">
+          <h2>🎮 Ta décision</h2>
+          ${choices}
+        </div>
+
+      </div>
+    </div>
+  `;
 }
 function finish(score){let pos=Math.max(1,Math.min(20,Math.round(12-(score-72)/3))),pts=[25,18,15,12,10,8,6,4,2,1][pos-1]||0,c=tracks[g.round];g.round++;g.races++;g.seasonPts+=pts;g.points+=pts;if(pos===1){g.wins++;g.rep=clamp(g.rep+4)}else if(pos<=3){g.podiums++;g.rep=clamp(g.rep+2)}g.history.push(`GP ${c[0]} : P${pos} · +${pts} points.`);save();modal(`<h2>${c[1]} ${c[0]} 🏁</h2><div class="stats"><div class="stat"><span>Résultat</span><b>P${pos}</b></div><div class="stat"><span>Points</span><b>+${pts}</b></div><div class="stat"><span>Championnat</span><b>${g.seasonPts}</b></div></div><p>${pos===1?"🏆 VICTOIRE !":pos<=3?"🥂 PODIUM !":"Course terminée."}</p><button style="width:100%" onclick="closeModal();tab='standings';render()">Voir le classement</button>`)}
 function standings(){let arr=[{n:g.name,t:g.team,p:g.seasonPts},{n:"Enzo Ricci",t:"Ferrari",p:g.round*11+20},{n:"Noah Bennett",t:"McLaren",p:g.round*10+15},{n:"Hugo Martin",t:"Mercedes",p:g.round*8+10},{n:"Leo Rossi",t:"Red Bull Racing",p:g.round*7}].sort((a,b)=>b.p-a.p);$("main").innerHTML=`<div class="screen">${head()}<div class="card"><div class="section-title"><h2>🏆 Pilotes</h2><span class="tag">${g.seasonPts} PTS</span></div><table><tr><th>#</th><th>Pilote</th><th>Équipe</th><th>Pts</th></tr>${arr.map((x,i)=>`<tr class="${x.n===g.name?"me":""}"><td>${i+1}</td><td>${x.n}</td><td>${x.t}</td><td><b>${x.p}</b></td></tr>`).join("")}</table></div></div>`}
